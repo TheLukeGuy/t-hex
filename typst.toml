@@ -1,0 +1,10 @@
+[package]
+name = "t-hex"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["TheLukeGuy"]
+license = "LGPL-3.0-or-later"
+description = "A versatile package for displaying bytes."
+repository = "https://github.com/TheLukeGuy/t-hex"
+keywords = ["hex", "byte", "binary", "debug"]
+compiler = "0.8.0"
