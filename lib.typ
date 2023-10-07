@@ -105,11 +105,12 @@
 #let _default-bytes-per-group = 2
 #let _default-groups-per-line = auto
 #let _default-max-groups-per-line = none
-// TODO: #let _default-group-separator-overrides-by-format = (ascii-text: none)
 #let _hide-null-bytes-default = false
 #let _uppercase-hex-letters-default = false
 #let _default-plain-text-fallback-char = "."
 #let _default-row-inset = (x: 0.3em, y: 0.25em)
+#let _default-group-separator-len = 0.5em
+#let _default-byte-reprs-without-group-separators = (byte-repr.ascii-text,)
 #let _default-view-separator-len = 0.5em
 #let _use-standard-table-default = false
 
@@ -241,12 +242,37 @@
 #let _display(
   displayable-data,
   line-number-format,
-  view-len,
+  view,
   groups-per-line,
   row-inset,
+  group-separator-len,
+  byte-reprs-without-group-separators,
   view-separator-len,
   use-standard-table,
 ) = {
+  let group-separator = h(group-separator-len)
+  let data-cell(cell) = {
+    let group-separator = if (
+      cell.repr not in byte-reprs-without-group-separators
+    ) {
+      group-separator
+    }
+    let value = cell.value.map(raw).join(group-separator)
+    if use-standard-table {
+      value
+    } else {
+      stack(
+        row-inset.y,
+        {
+          let h = h(row-inset.x)
+          h
+          value
+          h
+        },
+        row-inset.y,
+      )
+    }
+  }
   style(styles => {
     let view-separator = if not use-standard-table {
       let text-height = measure(raw("0"), styles).height
@@ -263,26 +289,12 @@
       h(view-separator-len, weak: true)
     }
 
-    let data-cell = if use-standard-table {
-      groups => raw(groups.join(" "))
-    } else {
-      groups => stack(
-        row-inset.y,
-        {
-          let h = h(row-inset.x)
-          h
-          raw(groups.join(" "))
-          h
-        },
-        row-inset.y,
-      )
-    }
     let children = ()
     for line in _partition-array(displayable-data, groups-per-line) {
-      let view = ((),) * view-len
+      let view = view.map(repr => (repr: repr, value: ()))
       for group in line {
-        for (idx, repr) in group.enumerate() {
-          view.at(idx).push(repr)
+        for (idx, byte) in group.enumerate() {
+          view.at(idx).value.push(byte)
         }
       }
       let view = view.map(data-cell)
@@ -293,9 +305,9 @@
     }
 
     let columns = if view-separator != none {
-      view-len * 2 - 1
+      view.len() * 2 - 1
     } else {
-      view-len
+      view.len()
     }
     if use-standard-table {
       let inset = if row-inset.x < row-inset.y {
@@ -320,11 +332,14 @@
   bytes-per-group: _default-bytes-per-group,
   groups-per-line: _default-groups-per-line,
   max-groups-per-line: _default-max-groups-per-line,
-  // TODO: group-separator-overrides-by-format
   hide-null-bytes: _hide-null-bytes-default,
   uppercase-hex-letters: _uppercase-hex-letters-default,
   plain-text-fallback-char: _default-plain-text-fallback-char,
   row-inset: _default-row-inset,
+  group-separator-len: _default-group-separator-len,
+  byte-reprs-without-group-separators: (
+    _default-byte-reprs-without-group-separators
+  ),
   view-separator-len: _default-view-separator-len,
   use-standard-table: _use-standard-table-default,
 ) = {
@@ -379,6 +394,17 @@
     (x: row-inset, y: row-inset)
   }
 
+  _check-type("group-separator-len", group-separator-len, length)
+  _check-type(
+    "byte-reprs-without-group-separators",
+    byte-reprs-without-group-separators,
+    array,
+  )
+  for (idx, repr) in byte-reprs-without-group-separators.enumerate() {
+    let name = "byte-reprs-without-group-separators[" + str(idx) + "]"
+    _check-enum-value(name, byte-repr, repr)
+  }
+
   _check-type("view-separator-len", view-separator-len, length)
   _check-type("use-standard-table", use-standard-table, bool)
 
@@ -391,14 +417,15 @@
     plain-text-fallback-char: plain-text-fallback-char,
   )
 
-  let view-len = view.len()
   if groups-per-line != auto {
     return _display(
       displayable,
       line-number-format,
-      view-len,
+      view,
       groups-per-line,
       row-inset,
+      group-separator-len,
+      byte-reprs-without-group-separators,
       view-separator-len,
       use-standard-table,
     )
@@ -409,9 +436,11 @@
       let test = _display(
         displayable,
         line-number-format,
-        view-len,
+        view,
         groups-per-line,
         row-inset,
+        group-separator-len,
+        byte-reprs-without-group-separators,
         view-separator-len,
         use-standard-table,
       )
