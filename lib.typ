@@ -24,7 +24,11 @@
 #let _check-type(name, value, ..allowed) = {
   let actual = type(value)
   let allowed = allowed.pos()
-  let actual = if actual == length and relative in allowed {
+  let actual = if (
+    actual not in allowed
+    and actual in (length, ratio)
+    and relative in allowed
+  ) {
     relative
   } else {
     actual
