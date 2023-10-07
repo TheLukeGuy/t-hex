@@ -90,13 +90,8 @@
 #let number-format = _enum("binary", "octal", "decimal", "hex")
 #let byte-repr = _enum("binary", "octal", "decimal", "hex", "ascii-text")
 
-#let views = (
-  default: (byte-repr.hex, byte-repr.ascii-text),
-  default-with-binary: (byte-repr.binary, byte-repr.hex, byte-repr.ascii-text),
-)
-
 #let _default-line-number-format = number-format.decimal
-#let _default-view = views.default
+#let _default-view = (byte-repr.hex, byte-repr.ascii-text)
 #let _default-bytes-per-group = 2
 #let _default-groups-per-line = auto
 #let _default-max-groups-per-line = none

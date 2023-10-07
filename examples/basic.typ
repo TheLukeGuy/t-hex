@@ -9,7 +9,7 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 #import "../lib.typ" as t-hex
-#import t-hex: byte-repr, views
+#import t-hex: byte-repr
 
 #let data = (
   dos-obj: read("data/dos-obj", encoding: none),
@@ -29,7 +29,7 @@
 
 #t-hex.display(
   "Hello, world!\n",
-  view: views.default-with-binary,
+  view: (byte-repr.binary, byte-repr.hex, byte-repr.ascii-text),
   bytes-per-group: none,
   uppercase-digits: true,
   plain-text-fallback-char: "?",
