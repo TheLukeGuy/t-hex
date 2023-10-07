@@ -93,11 +93,11 @@
 #let _default-line-number-format = number-format.decimal
 #let _default-view = (byte-repr.hex, byte-repr.ascii-text)
 #let _default-bytes-per-group = 2
-#let _default-groups-per-line = auto
-#let _default-max-groups-per-line = none
 #let _hide-null-bytes-default = false
 #let _uppercase-digits-default = false
 #let _default-plain-text-fallback-char = "."
+#let _default-groups-per-line = auto
+#let _default-max-groups-per-line = none
 #let _default-row-inset = (x: 0.3em, y: 0.25em)
 #let _default-group-separator-len = 0.5em
 #let _default-byte-reprs-without-group-separators = (byte-repr.ascii-text,)
@@ -328,11 +328,11 @@
   line-number-format: _default-line-number-format,
   view: _default-view,
   bytes-per-group: _default-bytes-per-group,
-  groups-per-line: _default-groups-per-line,
-  max-groups-per-line: _default-max-groups-per-line,
   hide-null-bytes: _hide-null-bytes-default,
   uppercase-digits: _uppercase-digits-default,
   plain-text-fallback-char: _default-plain-text-fallback-char,
+  groups-per-line: _default-groups-per-line,
+  max-groups-per-line: _default-max-groups-per-line,
   row-inset: _default-row-inset,
   group-separator-len: _default-group-separator-len,
   byte-reprs-without-group-separators: (
