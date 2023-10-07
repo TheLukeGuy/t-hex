@@ -223,7 +223,12 @@
     _check-enum-value(name, byte-repr, repr, check-type: false)
   }
 
-  _check-type("bytes-per-group", bytes-per-group, int)
+  _check-type("bytes-per-group", bytes-per-group, int, type(none))
+  let bytes-per-group = if bytes-per-group != none {
+    bytes-per-group
+  } else {
+    1
+  }
 
   let transformed-view = ()
   for group in _partition-array(data, bytes-per-group) {
@@ -420,6 +425,11 @@
     uppercase-hex-letters: uppercase-hex-letters,
     plain-text-fallback-char: plain-text-fallback-char,
   )
+  let group-separator-len = if bytes-per-group != none {
+    group-separator-len
+  } else {
+    0pt
+  }
 
   if groups-per-line != auto {
     return _display(
