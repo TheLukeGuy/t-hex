@@ -217,18 +217,6 @@
     uppercase-digits,
     plain-text-fallback-char,
   )
-
-  let view-type = _check-type("view", view, int, array)
-  let view = if view-type == int {
-    (view,)
-  } else {
-    view
-  }
-  for (idx, repr) in view.enumerate() {
-    let name = "view[" + str(idx) + "]"
-    _check-enum-value(name, byte-repr, repr, check-type: false)
-  }
-
   _check-type("bytes-per-group", bytes-per-group, int, type(none))
   let bytes-per-group = if bytes-per-group != none {
     bytes-per-group
@@ -364,6 +352,17 @@
     line-number-format,
     optional: true,
   )
+
+  let view-type = _check-type("view", view, int, array)
+  let view = if view-type == int {
+    (view,)
+  } else {
+    view
+  }
+  for (idx, repr) in view.enumerate() {
+    let name = "view[" + str(idx) + "]"
+    _check-enum-value(name, byte-repr, repr, check-type: false)
+  }
 
   _check-type("groups-per-line", groups-per-line, int, type(auto))
   _check-type("max-groups-per-line", max-groups-per-line, int, type(none))
