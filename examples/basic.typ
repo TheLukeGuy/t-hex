@@ -11,13 +11,13 @@
 #import "../lib.typ" as t-hex
 #import t-hex: views
 
-#let sample-data = (
-  dos-obj: read("sample-data/dos-obj", encoding: none),
-  png: read("sample-data/png", encoding: none),
+#let data = (
+  dos-obj: read("data/dos-obj", encoding: none),
+  png: read("data/png", encoding: none),
 )
 
-#t-hex.display(sample-data.dos-obj)
-#t-hex.display(sample-data.png, bytes-per-group: 8)
+#t-hex.display(data.dos-obj)
+#t-hex.display(data.png, bytes-per-group: 8)
 #t-hex.display(
   "Hello, world!",
   view: views.default-with-binary,
