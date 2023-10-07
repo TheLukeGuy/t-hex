@@ -9,17 +9,28 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 #import "../lib.typ" as t-hex
-#import t-hex: views
+#import t-hex: byte-repr, views
 
 #let data = (
   dos-obj: read("data/dos-obj", encoding: none),
+  pc-mbr: read("data/pc-mbr", encoding: none),
   png: read("data/png", encoding: none),
 )
 
 #t-hex.display(data.dos-obj)
-#t-hex.display(data.png, bytes-per-group: 8)
+
 #t-hex.display(
-  "Hello, world!",
+  data.pc-mbr,
+  view: (byte-repr.octal, byte-repr.ascii-text),
+  bytes-per-group: 1,
+)
+
+#t-hex.display(data.png, bytes-per-group: 4, hide-null-bytes: true)
+
+#t-hex.display(
+  "Hello, world!\n",
   view: views.default-with-binary,
-  uppercase-hex-letters: true,
+  bytes-per-group: none,
+  uppercase-digits: true,
+  plain-text-fallback-char: "?",
 )

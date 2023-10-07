@@ -72,15 +72,6 @@
   panic(name + ": invalid enum value")
 }
 
-#let _left-pad-with-zeroes(unpadded, len) = {
-  let unpadded-len = unpadded.len()
-  if unpadded-len < len {
-    let diff = len - unpadded-len
-    "0" * diff
-  }
-  unpadded
-}
-
 #let _partition-array(unpartitioned, len) = {
   let unpartitioned-len = unpartitioned.len()
   let partitioned = ()
@@ -96,8 +87,8 @@
   partitioned
 }
 
-#let number-format = _enum("binary", "decimal", "hex")
-#let byte-repr = _enum("binary", "decimal", "hex", "ascii-text")
+#let number-format = _enum("binary", "octal", "decimal", "hex")
+#let byte-repr = _enum("binary", "octal", "decimal", "hex", "ascii-text")
 
 #let views = (
   default: (byte-repr.hex, byte-repr.ascii-text),
@@ -110,7 +101,7 @@
 #let _default-groups-per-line = auto
 #let _default-max-groups-per-line = none
 #let _hide-null-bytes-default = false
-#let _uppercase-hex-letters-default = false
+#let _uppercase-digits-default = false
 #let _default-plain-text-fallback-char = "."
 #let _default-row-inset = (x: 0.3em, y: 0.25em)
 #let _default-group-separator-len = 0.5em
@@ -121,7 +112,7 @@
 #let _handle-common-displayable-args(
   data,
   hide-null-bytes,
-  uppercase-hex-letters,
+  uppercase-digits,
   plain-text-fallback-char,
 ) = {
   let data = if type(data) != bytes {
@@ -132,7 +123,7 @@
   }
 
   _check-type("hide-null-bytes", hide-null-bytes, bool)
-  _check-type("uppercase-hex-letters", uppercase-hex-letters, bool)
+  _check-type("uppercase-digits", uppercase-digits, bool)
   _check-type("plain-text-fallback-char", plain-text-fallback-char, str)
   if plain-text-fallback-char.clusters().len() != 1 {
     panic("plain-text-fallback-char: not a single grapheme cluster")
@@ -141,59 +132,74 @@
   data
 }
 
+#let _number-format-radices = (2, 8, 10, 16)
+#let _number-format-str-lens = (8, 3, 3, 2)
+
+#let _str-from-int(
+  value,
+  format-or-repr,
+  hide-null-values,
+  uppercase-digits,
+  plain-text-fallback-char,
+) = {
+  let show-value = not hide-null-values or value != 0
+  if format-or-repr < number-format.len() {
+    let len = _number-format-str-lens.at(format-or-repr)
+    if show-value {
+      let radix = _number-format-radices.at(format-or-repr)
+      let unpadded = str(value, base: radix)
+      let unpadded = if radix > 10 {
+        if uppercase-digits {
+          upper(unpadded)
+        } else {
+          lower(unpadded)
+        }
+      } else {
+        unpadded
+      }
+
+      let unpadded-len = unpadded.len()
+      if unpadded-len < len {
+        let diff = len - unpadded-len
+        "0" * diff
+      }
+      unpadded
+    } else {
+      " " * len
+    }
+  } else if show-value {
+    if value >= 0x20 and value <= 0x7e {
+      str.from-unicode(value)
+    } else {
+      plain-text-fallback-char
+    }
+  } else {
+    " "
+  }
+}
+
 #let displayable-group(
   data,
   repr,
   hide-null-bytes: _hide-null-bytes-default,
-  uppercase-hex-letters: _uppercase-hex-letters-default,
+  uppercase-digits: _uppercase-digits-default,
   plain-text-fallback-char: _default-plain-text-fallback-char,
 ) = {
   let data = _handle-common-displayable-args(
     data,
     hide-null-bytes,
-    uppercase-hex-letters,
+    uppercase-digits,
     plain-text-fallback-char,
   )
   for idx in range(data.len()) {
     let byte = data.at(idx)
-    let show-byte = not hide-null-bytes or byte != 0
-    if repr == byte-repr.binary {
-      if show-byte {
-        _left-pad-with-zeroes(str(byte, base: 2), 8)
-      } else {
-        " " * 8
-      }
-    } else if repr == byte-repr.decimal {
-      if show-byte {
-        _left-pad-with-zeroes(str(byte), 3)
-      } else {
-        " " * 3
-      }
-    } else if repr == byte-repr.hex {
-      if show-byte {
-        let unpadded = str(byte, base: 16)
-        let unpadded = if uppercase-hex-letters {
-          upper(unpadded)
-        } else {
-          lower(unpadded)
-        }
-        _left-pad-with-zeroes(unpadded, 2)
-      } else {
-        " " * 2
-      }
-    } else if repr == byte-repr.ascii-text {
-      if show-byte {
-        if byte >= 0x20 and byte <= 0x7e {
-          str.from-unicode(byte)
-        } else {
-          plain-text-fallback-char
-        }
-      } else {
-        " "
-      }
-    } else {
-      panic("[unexpected] found unhandled byte representation")
-    }
+    _str-from-int(
+      byte,
+      repr,
+      hide-null-bytes,
+      uppercase-digits,
+      plain-text-fallback-char,
+    )
   }
 }
 
@@ -202,13 +208,13 @@
   view: _default-view,
   bytes-per-group: _default-bytes-per-group,
   hide-null-bytes: _hide-null-bytes-default,
-  uppercase-hex-letters: _uppercase-hex-letters-default,
+  uppercase-digits: _uppercase-digits-default,
   plain-text-fallback-char: _default-plain-text-fallback-char,
 ) = {
   let data = _handle-common-displayable-args(
     data,
     hide-null-bytes,
-    uppercase-hex-letters,
+    uppercase-digits,
     plain-text-fallback-char,
   )
 
@@ -238,7 +244,7 @@
         group,
         repr,
         hide-null-bytes: hide-null-bytes,
-        uppercase-hex-letters: uppercase-hex-letters,
+        uppercase-digits: uppercase-digits,
         plain-text-fallback-char: plain-text-fallback-char,
       )
       transformed-group.push(displayable)
@@ -342,7 +348,7 @@
   groups-per-line: _default-groups-per-line,
   max-groups-per-line: _default-max-groups-per-line,
   hide-null-bytes: _hide-null-bytes-default,
-  uppercase-hex-letters: _uppercase-hex-letters-default,
+  uppercase-digits: _uppercase-digits-default,
   plain-text-fallback-char: _default-plain-text-fallback-char,
   row-inset: _default-row-inset,
   group-separator-len: _default-group-separator-len,
@@ -422,7 +428,7 @@
     view: view,
     bytes-per-group: bytes-per-group,
     hide-null-bytes: hide-null-bytes,
-    uppercase-hex-letters: uppercase-hex-letters,
+    uppercase-digits: uppercase-digits,
     plain-text-fallback-char: plain-text-fallback-char,
   )
   let group-separator-len = if bytes-per-group != none {
