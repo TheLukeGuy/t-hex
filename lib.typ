@@ -533,7 +533,11 @@
       if fits and not-reached-limit {
         last = test
       } else {
-        last
+        if fits {
+          test
+        } else {
+          last
+        }
         break
       }
     }
