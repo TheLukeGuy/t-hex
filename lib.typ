@@ -100,7 +100,6 @@
 #let _default-plain-text-fallback-char = "."
 #let _default-groups-per-line = auto
 #let _default-max-groups-per-line = none
-#let _use-standard-table-default = false
 #let _default-stroke = 1pt + black
 #let _default-radius = 0pt
 #let _default-inset = (x: 0.3em, y: 0.25em)
@@ -108,6 +107,7 @@
 #let _default-line-num-alignment = right
 #let _default-group-separator-len = 0.5em
 #let _default-byte-reprs-without-group-separators = (byte-repr.ascii-text,)
+#let _use-standard-table-default = false
 
 #let _handle-common-displayable-args(
   data,
@@ -256,7 +256,6 @@
   view,
   bytes-per-group,
   groups-per-line,
-  use-standard-table,
   stroke,
   radius,
   inset,
@@ -264,6 +263,7 @@
   line-num-alignment,
   group-separator-len,
   byte-reprs-without-group-separators,
+  use-standard-table,
 ) = {
   let cell(body) = if use-standard-table {
     body
@@ -399,7 +399,6 @@
   groups-per-line: _default-groups-per-line,
   max-groups-per-line: _default-max-groups-per-line,
   // Styling options
-  use-standard-table: _use-standard-table-default,
   stroke: _default-stroke,
   radius: _default-radius,
   inset: _default-inset,
@@ -409,6 +408,8 @@
   byte-reprs-without-group-separators: (
     _default-byte-reprs-without-group-separators
   ),
+  // Advanced styling options
+  use-standard-table: _use-standard-table-default,
 ) = {
   _check-enum-value("line-num-fmt", num-fmt, line-num-fmt, optional: true)
   _check-type("line-num-uppercase-digits", line-num-uppercase-digits, bool)
@@ -440,7 +441,6 @@
     panic("max-groups-per-line: number must be at least 1")
   }
 
-  _check-type("use-standard-table", use-standard-table, bool)
   // TODO: Validate stroke and radius
 
   let inset-type = _check-type("inset", inset, relative, dictionary)
@@ -473,7 +473,6 @@
   }
 
   _check-type("view-separator-len", view-separator-len, length)
-
   _check-type("line-num-alignment", line-num-alignment, alignment)
   _check-type("group-separator-len", group-separator-len, length)
   _check-type(
@@ -485,6 +484,7 @@
     let name = "byte-reprs-without-group-separators[" + str(idx) + "]"
     _check-enum-value(name, byte-repr, repr)
   }
+  _check-type("use-standard-table", use-standard-table, bool)
 
   let displayable = displayable-data(
     data,
@@ -509,7 +509,6 @@
       view,
       bytes-per-group,
       groups-per-line,
-      use-standard-table,
       stroke,
       radius,
       inset,
@@ -517,6 +516,7 @@
       line-num-alignment,
       group-separator-len,
       byte-reprs-without-group-separators,
+      use-standard-table,
     )
   }
   layout(container-size => style(styles => {
@@ -530,7 +530,6 @@
         view,
         bytes-per-group,
         groups-per-line,
-        use-standard-table,
         stroke,
         radius,
         inset,
@@ -538,6 +537,7 @@
         line-num-alignment,
         group-separator-len,
         byte-reprs-without-group-separators,
+        use-standard-table,
       )
 
       let test-size = measure(test, styles)
