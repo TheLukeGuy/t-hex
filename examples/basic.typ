@@ -9,7 +9,7 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 #import "../lib.typ" as t-hex
-#import t-hex: byte-repr, number-format
+#import t-hex: byte-repr, num-fmt
 
 #let data = (
   dos-obj: read("data/dos-obj", encoding: none),
@@ -21,8 +21,8 @@
 
 #t-hex.display(
   data.pc-mbr,
-  line-number-format: number-format.hex,
-  line-number-padding: true,
+  line-num-fmt: num-fmt.hex,
+  line-num-padding: true,
   view: (byte-repr.octal, byte-repr.ascii-text),
   bytes-per-group: 1,
 )
@@ -31,7 +31,7 @@
 
 #t-hex.display(
   "Hello, world!\n",
-  line-number-format: none,
+  line-num-fmt: none,
   view: (byte-repr.binary, byte-repr.hex, byte-repr.ascii-text),
   bytes-per-group: none,
   uppercase-digits: true,
