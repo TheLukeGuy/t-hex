@@ -101,6 +101,8 @@
 #let _default-groups-per-line = auto
 #let _default-max-groups-per-line = none
 #let _use-standard-table-default = false
+#let _default-stroke = 1pt + black
+#let _default-radius = 0pt
 #let _default-row-inset = (x: 0.3em, y: 0.25em)
 #let _default-view-separator-len = 0.5em
 #let _default-line-num-alignment = right
@@ -255,6 +257,8 @@
   bytes-per-group,
   groups-per-line,
   use-standard-table,
+  stroke,
+  radius,
   row-inset,
   view-separator-len,
   line-num-alignment,
@@ -291,7 +295,12 @@
     let view-separator = if not use-standard-table {
       let text-height = measure(raw("0"), styles).height
       let row-height = text-height + (row-inset.y * 2)
-      let separator-line = box(line(length: row-height, angle: 90deg))
+      let separator-line = box(line(
+        length:
+        row-height,
+        angle: 90deg,
+        stroke: stroke,
+      ))
       if view-separator-len != 0pt {
         separator-line
         h(view-separator-len)
@@ -364,10 +373,11 @@
       } else {
         row-inset.x
       }
-      table(columns: columns, inset: inset, ..children)
+      table(columns: columns, stroke: stroke, inset: inset, ..children)
     } else {
       block(
-        stroke: 1pt,
+        stroke: stroke,
+        radius: radius,
         table(columns: columns, stroke: none, inset: 0pt, ..children),
       )
     }
@@ -390,6 +400,8 @@
   max-groups-per-line: _default-max-groups-per-line,
   // Styling params
   use-standard-table: _use-standard-table-default,
+  stroke: _default-stroke,
+  radius: _default-radius,
   row-inset: _default-row-inset,
   view-separator-len: _default-view-separator-len,
   line-num-alignment: _default-line-num-alignment,
@@ -429,6 +441,7 @@
   }
 
   _check-type("use-standard-table", use-standard-table, bool)
+  // TODO: Validate stroke and radius
 
   let row-inset-type = _check-type("row-inset", row-inset, relative, dictionary)
   let row-inset = if row-inset-type == dictionary {
@@ -497,6 +510,8 @@
       bytes-per-group,
       groups-per-line,
       use-standard-table,
+      stroke,
+      radius,
       row-inset,
       view-separator-len,
       line-num-alignment,
@@ -516,6 +531,8 @@
         bytes-per-group,
         groups-per-line,
         use-standard-table,
+        stroke,
+        radius,
         row-inset,
         view-separator-len,
         line-num-alignment,
