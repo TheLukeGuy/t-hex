@@ -15,5 +15,5 @@
   data,
   stroke: 1.5pt + purple,
   radius: 5pt,
-  row-inset: (x: 0.45em, y: 0.375em),
+  inset: (x: 0.45em, y: 0.375em),
 )

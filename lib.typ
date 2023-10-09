@@ -103,7 +103,7 @@
 #let _use-standard-table-default = false
 #let _default-stroke = 1pt + black
 #let _default-radius = 0pt
-#let _default-row-inset = (x: 0.3em, y: 0.25em)
+#let _default-inset = (x: 0.3em, y: 0.25em)
 #let _default-view-separator-len = 0.5em
 #let _default-line-num-alignment = right
 #let _default-group-separator-len = 0.5em
@@ -259,7 +259,7 @@
   use-standard-table,
   stroke,
   radius,
-  row-inset,
+  inset,
   view-separator-len,
   line-num-alignment,
   group-separator-len,
@@ -269,14 +269,14 @@
     body
   } else {
     stack(
-      row-inset.y,
+      inset.y,
       {
-        let h = h(row-inset.x)
+        let h = h(inset.x)
         h
         body
         h
       },
-      row-inset.y,
+      inset.y,
     )
   }
 
@@ -294,7 +294,7 @@
   style(styles => {
     let view-separator = if not use-standard-table {
       let text-height = measure(raw("0"), styles).height
-      let row-height = text-height + (row-inset.y * 2)
+      let row-height = text-height + (inset.y * 2)
       let separator-line = box(line(
         length:
         row-height,
@@ -368,10 +368,10 @@
       }
     }
     if use-standard-table {
-      let inset = if row-inset.x < row-inset.y {
-        row-inset.y
+      let inset = if inset.x < inset.y {
+        inset.y
       } else {
-        row-inset.x
+        inset.x
       }
       table(columns: columns, stroke: stroke, inset: inset, ..children)
     } else {
@@ -402,7 +402,7 @@
   use-standard-table: _use-standard-table-default,
   stroke: _default-stroke,
   radius: _default-radius,
-  row-inset: _default-row-inset,
+  inset: _default-inset,
   view-separator-len: _default-view-separator-len,
   line-num-alignment: _default-line-num-alignment,
   group-separator-len: _default-group-separator-len,
@@ -443,33 +443,33 @@
   _check-type("use-standard-table", use-standard-table, bool)
   // TODO: Validate stroke and radius
 
-  let row-inset-type = _check-type("row-inset", row-inset, relative, dictionary)
-  let row-inset = if row-inset-type == dictionary {
-    for key in row-inset.keys() {
+  let inset-type = _check-type("inset", inset, relative, dictionary)
+  let inset = if inset-type == dictionary {
+    for key in inset.keys() {
       if key not in ("x", "y") {
         panic(
-          "row-inset: unexpected key \""
+          "inset: unexpected key \""
             + key
             + "\", valid keys are \"x\" and \"y\""
         )
       }
     }
     (
-      x: if "x" in row-inset {
-        _check-type("row-inset.x", row-inset.x, relative)
-        row-inset.x
+      x: if "x" in inset {
+        _check-type("inset.x", inset.x, relative)
+        inset.x
       } else {
-        _default-row-inset.x
+        _default-inset.x
       },
-      y: if "y" in row-inset {
-        _check-type("row-inset.y", row-inset.y, relative)
-        row-inset.y
+      y: if "y" in inset {
+        _check-type("inset.y", inset.y, relative)
+        inset.y
       } else {
-        _default-row-inset.y
+        _default-inset.y
       },
     )
   } else {
-    (x: row-inset, y: row-inset)
+    (x: inset, y: inset)
   }
 
   _check-type("view-separator-len", view-separator-len, length)
@@ -512,7 +512,7 @@
       use-standard-table,
       stroke,
       radius,
-      row-inset,
+      inset,
       view-separator-len,
       line-num-alignment,
       group-separator-len,
@@ -533,7 +533,7 @@
         use-standard-table,
         stroke,
         radius,
-        row-inset,
+        inset,
         view-separator-len,
         line-num-alignment,
         group-separator-len,
