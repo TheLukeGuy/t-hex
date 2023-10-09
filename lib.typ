@@ -91,6 +91,8 @@
 #let byte-repr = _enum("binary", "octal", "decimal", "hex", "ascii-text")
 
 #let _default-line-number-format = number-format.decimal
+#let _line-number-uppercase-digits-default = true
+#let _line-number-padding-default = false
 #let _default-view = (byte-repr.hex, byte-repr.ascii-text)
 #let _default-bytes-per-group = 2
 #let _hide-null-bytes-default = false
@@ -99,6 +101,7 @@
 #let _default-groups-per-line = auto
 #let _default-max-groups-per-line = none
 #let _default-row-inset = (x: 0.3em, y: 0.25em)
+#let _default-line-number-alignment = right
 #let _default-group-separator-len = 0.5em
 #let _default-byte-reprs-without-group-separators = (byte-repr.ascii-text,)
 #let _default-view-separator-len = 0.5em
@@ -133,13 +136,18 @@
 #let _str-from-int(
   value,
   format-or-repr,
-  hide-null-values,
+  hide-null-values: false,
   uppercase-digits,
-  plain-text-fallback-char,
+  pad-numbers-to,
+  plain-text-fallback-char: none,
 ) = {
   let show-value = not hide-null-values or value != 0
   if format-or-repr < number-format.len() {
-    let len = _number-format-str-lens.at(format-or-repr)
+    let pad-numbers-to = if pad-numbers-to == auto {
+      _number-format-str-lens.at(format-or-repr)
+    } else {
+      pad-numbers-to
+    }
     if show-value {
       let radix = _number-format-radices.at(format-or-repr)
       let unpadded = str(value, base: radix)
@@ -154,13 +162,13 @@
       }
 
       let unpadded-len = unpadded.len()
-      if unpadded-len < len {
-        let diff = len - unpadded-len
+      if unpadded-len < pad-numbers-to {
+        let diff = pad-numbers-to - unpadded-len
         "0" * diff
       }
       unpadded
     } else {
-      " " * len
+      " " * pad-numbers-to
     }
   } else if show-value {
     if value >= 0x20 and value <= 0x7e {
@@ -191,9 +199,10 @@
     _str-from-int(
       byte,
       repr,
-      hide-null-bytes,
+      hide-null-values: hide-null-bytes,
       uppercase-digits,
-      plain-text-fallback-char,
+      auto,
+      plain-text-fallback-char: plain-text-fallback-char,
     )
   }
 }
@@ -240,37 +249,44 @@
 #let _display(
   displayable-data,
   line-number-format,
+  line-number-uppercase-digits,
+  line-number-padding,
   view,
+  bytes-per-group,
   groups-per-line,
   row-inset,
+  line-number-alignment,
   group-separator-len,
   byte-reprs-without-group-separators,
   view-separator-len,
   use-standard-table,
 ) = {
+  let cell(body) = if use-standard-table {
+    body
+  } else {
+    stack(
+      row-inset.y,
+      {
+        let h = h(row-inset.x)
+        h
+        body
+        h
+      },
+      row-inset.y,
+    )
+  }
+
   let group-separator = h(group-separator-len)
-  let data-cell(cell) = {
+  let data-cell(data) = {
     let group-separator = if (
-      cell.repr not in byte-reprs-without-group-separators
+      data.repr not in byte-reprs-without-group-separators
     ) {
       group-separator
     }
-    let value = cell.value.map(raw).join(group-separator)
-    if use-standard-table {
-      value
-    } else {
-      stack(
-        row-inset.y,
-        {
-          let h = h(row-inset.x)
-          h
-          value
-          h
-        },
-        row-inset.y,
-      )
-    }
+    let value = data.value.map(raw).join(group-separator)
+    cell(value)
   }
+
   style(styles => {
     let view-separator = if not use-standard-table {
       let text-height = measure(raw("0"), styles).height
@@ -287,25 +303,60 @@
       h(view-separator-len, weak: true)
     }
 
+    let partitioned = _partition-array(displayable-data, groups-per-line)
+    let bytes-per-line = if bytes-per-group != none {
+      bytes-per-group * groups-per-line
+    } else {
+      groups-per-line
+    }
+    let pad-line-numbers-to = if line-number-padding {
+      let max-line-number = bytes-per-line * (partitioned.len() - 1)
+      let radix = _number-format-radices.at(line-number-format)
+      str(max-line-number, base: radix).len()
+    } else {
+      0
+    }
     let children = ()
-    for line in _partition-array(displayable-data, groups-per-line) {
+    for (line-idx, line) in partitioned.enumerate() {
       let view = view.map(repr => (repr: repr, value: ()))
       for group in line {
-        for (idx, byte) in group.enumerate() {
-          view.at(idx).value.push(byte)
+        for (view-idx, byte) in group.enumerate() {
+          view.at(view-idx).value.push(byte)
         }
       }
       let view = view.map(data-cell)
 
       let line = view.intersperse(view-separator)
-      // TODO: Add line numbers
+      let line = if line-number-format != none {
+        let line-number = bytes-per-line * line-idx
+        let line-number = _str-from-int(
+          line-number,
+          line-number-format,
+          line-number-uppercase-digits,
+          pad-line-numbers-to,
+        )
+        let cell = align(line-number-alignment, cell(raw(line-number)))
+        (cell, view-separator) + line
+      } else {
+        line
+      }
       children += line
     }
 
     let columns = if view-separator != none {
-      view.len() * 2 - 1
+      let columns = view.len() * 2 - 1
+      if line-number-format != none {
+        columns + 2
+      } else {
+        columns
+      }
     } else {
-      view.len()
+      let columns = view.len()
+      if line-number-format != none {
+        columns + 2
+      } else {
+        columns
+      }
     }
     if use-standard-table {
       let inset = if row-inset.x < row-inset.y {
@@ -325,15 +376,21 @@
 
 #let display(
   data,
+  // Data formatting params
   line-number-format: _default-line-number-format,
+  line-number-uppercase-digits: _line-number-uppercase-digits-default,
+  line-number-padding: _line-number-padding-default,
   view: _default-view,
   bytes-per-group: _default-bytes-per-group,
   hide-null-bytes: _hide-null-bytes-default,
   uppercase-digits: _uppercase-digits-default,
   plain-text-fallback-char: _default-plain-text-fallback-char,
+  // Sizing params
   groups-per-line: _default-groups-per-line,
   max-groups-per-line: _default-max-groups-per-line,
+  // Styling params
   row-inset: _default-row-inset,
+  line-number-alignment: _default-line-number-alignment,
   group-separator-len: _default-group-separator-len,
   byte-reprs-without-group-separators: (
     _default-byte-reprs-without-group-separators
@@ -347,6 +404,12 @@
     line-number-format,
     optional: true,
   )
+  _check-type(
+    "line-number-uppercase-digits",
+    line-number-uppercase-digits,
+    bool,
+  )
+  _check-type("line-number-padding", line-number-padding, bool)
 
   let view-type = _check-type("view", view, int, array)
   let view = if view-type == int {
@@ -403,6 +466,7 @@
     (x: row-inset, y: row-inset)
   }
 
+  _check-type("line-number-alignment", line-number-alignment, alignment)
   _check-type("group-separator-len", group-separator-len, length)
   _check-type(
     "byte-reprs-without-group-separators",
@@ -435,9 +499,13 @@
     return _display(
       displayable,
       line-number-format,
+      line-number-uppercase-digits,
+      line-number-padding,
       view,
+      bytes-per-group,
       groups-per-line,
       row-inset,
+      line-number-alignment,
       group-separator-len,
       byte-reprs-without-group-separators,
       view-separator-len,
@@ -450,9 +518,13 @@
       let test = _display(
         displayable,
         line-number-format,
+        line-number-uppercase-digits,
+        line-number-padding,
         view,
+        bytes-per-group,
         groups-per-line,
         row-inset,
+        line-number-alignment,
         group-separator-len,
         byte-reprs-without-group-separators,
         view-separator-len,
