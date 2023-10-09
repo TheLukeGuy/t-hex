@@ -386,7 +386,7 @@
 
 #let display(
   data,
-  // Data formatting params
+  // Data formatting options
   line-num-fmt: _default-line-num-fmt,
   line-num-uppercase-digits: _line-num-uppercase-digits-default,
   line-num-padding: _line-num-padding-default,
@@ -395,10 +395,10 @@
   hide-null-bytes: _hide-null-bytes-default,
   uppercase-digits: _uppercase-digits-default,
   plain-text-fallback-char: _default-plain-text-fallback-char,
-  // Sizing params
+  // Sizing options
   groups-per-line: _default-groups-per-line,
   max-groups-per-line: _default-max-groups-per-line,
-  // Styling params
+  // Styling options
   use-standard-table: _use-standard-table-default,
   stroke: _default-stroke,
   radius: _default-radius,
