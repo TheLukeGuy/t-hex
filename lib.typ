@@ -100,12 +100,12 @@
 #let _default-plain-text-fallback-char = "."
 #let _default-groups-per-line = auto
 #let _default-max-groups-per-line = none
+#let _use-standard-table-default = false
 #let _default-row-inset = (x: 0.3em, y: 0.25em)
+#let _default-view-separator-len = 0.5em
 #let _default-line-num-alignment = right
 #let _default-group-separator-len = 0.5em
 #let _default-byte-reprs-without-group-separators = (byte-repr.ascii-text,)
-#let _default-view-separator-len = 0.5em
-#let _use-standard-table-default = false
 
 #let _handle-common-displayable-args(
   data,
@@ -254,12 +254,12 @@
   view,
   bytes-per-group,
   groups-per-line,
+  use-standard-table,
   row-inset,
+  view-separator-len,
   line-num-alignment,
   group-separator-len,
   byte-reprs-without-group-separators,
-  view-separator-len,
-  use-standard-table,
 ) = {
   let cell(body) = if use-standard-table {
     body
@@ -389,14 +389,14 @@
   groups-per-line: _default-groups-per-line,
   max-groups-per-line: _default-max-groups-per-line,
   // Styling params
+  use-standard-table: _use-standard-table-default,
   row-inset: _default-row-inset,
+  view-separator-len: _default-view-separator-len,
   line-num-alignment: _default-line-num-alignment,
   group-separator-len: _default-group-separator-len,
   byte-reprs-without-group-separators: (
     _default-byte-reprs-without-group-separators
   ),
-  view-separator-len: _default-view-separator-len,
-  use-standard-table: _use-standard-table-default,
 ) = {
   _check-enum-value("line-num-fmt", num-fmt, line-num-fmt, optional: true)
   _check-type("line-num-uppercase-digits", line-num-uppercase-digits, bool)
@@ -428,6 +428,8 @@
     panic("max-groups-per-line: number must be at least 1")
   }
 
+  _check-type("use-standard-table", use-standard-table, bool)
+
   let row-inset-type = _check-type("row-inset", row-inset, relative, dictionary)
   let row-inset = if row-inset-type == dictionary {
     for key in row-inset.keys() {
@@ -457,6 +459,8 @@
     (x: row-inset, y: row-inset)
   }
 
+  _check-type("view-separator-len", view-separator-len, length)
+
   _check-type("line-num-alignment", line-num-alignment, alignment)
   _check-type("group-separator-len", group-separator-len, length)
   _check-type(
@@ -468,9 +472,6 @@
     let name = "byte-reprs-without-group-separators[" + str(idx) + "]"
     _check-enum-value(name, byte-repr, repr)
   }
-
-  _check-type("view-separator-len", view-separator-len, length)
-  _check-type("use-standard-table", use-standard-table, bool)
 
   let displayable = displayable-data(
     data,
@@ -495,12 +496,12 @@
       view,
       bytes-per-group,
       groups-per-line,
+      use-standard-table,
       row-inset,
+      view-separator-len,
       line-num-alignment,
       group-separator-len,
       byte-reprs-without-group-separators,
-      view-separator-len,
-      use-standard-table,
     )
   }
   layout(container-size => style(styles => {
@@ -514,12 +515,12 @@
         view,
         bytes-per-group,
         groups-per-line,
+        use-standard-table,
         row-inset,
+        view-separator-len,
         line-num-alignment,
         group-separator-len,
         byte-reprs-without-group-separators,
-        view-separator-len,
-        use-standard-table,
       )
 
       let test-size = measure(test, styles)
