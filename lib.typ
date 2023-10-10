@@ -104,6 +104,8 @@
 #let _default-radius = 0pt
 #let _default-inset = (x: 0.3em, y: 0.25em)
 #let _default-view-separator-len = 0.5em
+#let _default-view-separator-fill = rgb(0%, 0%, 0%, 10%)
+#let _default-fill = (none, rgb(0%, 0%, 0%, 5%))
 #let _default-line-num-alignment = right
 #let _default-group-separator-len = 0.5em
 #let _default-byte-reprs-without-group-separators = (byte-repr.ascii-text,)
@@ -260,26 +262,20 @@
   radius,
   inset,
   view-separator-len,
+  view-separator-fill,
+  fill,
   line-num-alignment,
   group-separator-len,
   byte-reprs-without-group-separators,
   use-standard-table,
 ) = {
-  let cell(body) = if use-standard-table {
-    body
-  } else {
-    stack(
-      inset.y,
-      {
-        let h = h(inset.x)
-        h
-        body
-        h
-      },
-      inset.y,
-    )
-  }
+  let partitioned = _partition-array(displayable-data, groups-per-line)
 
+  let cell(body) = if not use-standard-table {
+    block(inset: inset, body)
+  } else {
+    body
+  }
   let group-separator = h(group-separator-len)
   let data-cell(data) = {
     let group-separator = if (
@@ -289,6 +285,19 @@
     }
     let value = data.value.map(raw).join(group-separator)
     cell(value)
+  }
+
+  let bytes-per-line = if bytes-per-group != none {
+    bytes-per-group * groups-per-line
+  } else {
+    groups-per-line
+  }
+  let pad-line-nums-to = if line-num-padding {
+    let max-line-num = bytes-per-line * (partitioned.len() - 1)
+    let radix = _num-fmt-radices.at(line-num-fmt)
+    str(max-line-num, base: radix).len()
+  } else {
+    0
   }
 
   style(styles => {
@@ -312,19 +321,6 @@
       h(view-separator-len, weak: true)
     }
 
-    let partitioned = _partition-array(displayable-data, groups-per-line)
-    let bytes-per-line = if bytes-per-group != none {
-      bytes-per-group * groups-per-line
-    } else {
-      groups-per-line
-    }
-    let pad-line-nums-to = if line-num-padding {
-      let max-line-num = bytes-per-line * (partitioned.len() - 1)
-      let radix = _num-fmt-radices.at(line-num-fmt)
-      str(max-line-num, base: radix).len()
-    } else {
-      0
-    }
     let children = ()
     for (line-idx, line) in partitioned.enumerate() {
       let view = view.map(repr => (repr: repr, value: ()))
@@ -367,18 +363,39 @@
         columns
       }
     }
+
+    let data-fill = fill
+    let fill(column, row) = if calc.even(column) {
+      data-fill(row)
+    } else {
+      view-separator-fill
+    }
+
     if use-standard-table {
       let inset = if inset.x < inset.y {
         inset.y
       } else {
         inset.x
       }
-      table(columns: columns, stroke: stroke, inset: inset, ..children)
+      table(
+        columns: columns,
+        fill: fill,
+        stroke: stroke,
+        inset: inset,
+        ..children,
+      )
     } else {
       block(
         stroke: stroke,
         radius: radius,
-        table(columns: columns, stroke: none, inset: 0pt, ..children),
+        clip: true,
+        table(
+          columns: columns,
+          fill: fill,
+          stroke: none,
+          inset: 0pt,
+          ..children,
+        ),
       )
     }
   })
@@ -403,6 +420,8 @@
   radius: _default-radius,
   inset: _default-inset,
   view-separator-len: _default-view-separator-len,
+  view-separator-fill: _default-view-separator-fill,
+  fill: _default-fill,
   line-num-alignment: _default-line-num-alignment,
   group-separator-len: _default-group-separator-len,
   byte-reprs-without-group-separators: (
@@ -473,8 +492,25 @@
   }
 
   _check-type("view-separator-len", view-separator-len, length)
+
+  _check-type("view-separator-fill", view-separator-fill, color, type(none))
+  let fill-type = _check-type("fill", fill, color, array, function, type(none))
+  let fill = if fill-type == array {
+    for (idx, element) in fill.enumerate() {
+      let name = "fill[" + str(idx) + "]"
+      let _ = _check-type(name, element, color, type(none))
+    }
+    row => {
+      let idx = calc.rem(row, fill.len())
+      fill.at(idx)
+    }
+  } else {
+    _ => fill
+  }
+
   _check-type("line-num-alignment", line-num-alignment, alignment)
   _check-type("group-separator-len", group-separator-len, length)
+
   _check-type(
     "byte-reprs-without-group-separators",
     byte-reprs-without-group-separators,
@@ -484,6 +520,7 @@
     let name = "byte-reprs-without-group-separators[" + str(idx) + "]"
     _check-enum-value(name, byte-repr, repr)
   }
+
   _check-type("use-standard-table", use-standard-table, bool)
 
   let displayable = displayable-data(
@@ -513,6 +550,8 @@
       radius,
       inset,
       view-separator-len,
+      view-separator-fill,
+      fill,
       line-num-alignment,
       group-separator-len,
       byte-reprs-without-group-separators,
@@ -534,6 +573,8 @@
         radius,
         inset,
         view-separator-len,
+        view-separator-fill,
+        fill,
         line-num-alignment,
         group-separator-len,
         byte-reprs-without-group-separators,
