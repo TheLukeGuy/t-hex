@@ -120,7 +120,7 @@
   plain-text-fallback-char,
 ) = {
   let data = if type(data) != bytes {
-    // PANIC: The data may not be convertible to bytes.
+    // UNCHECKED: The data may not be convertible to bytes.
     bytes(data)
   } else {
     data
@@ -388,6 +388,7 @@
         col
       }
       if calc.even(col) {
+        // UNCHECKED: A user-specified function may have an invalid signature.
         data-fill(row)
       } else {
         view-separator-fill
@@ -517,8 +518,10 @@
       let idx = calc.rem(row, fill.len())
       fill.at(idx)
     }
-  } else {
+  } else if fill-type != function {
     _ => fill
+  } else {
+    fill
   }
 
   _check-type("compact-line-nums", compact-line-nums, bool)
