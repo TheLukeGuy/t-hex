@@ -360,34 +360,34 @@
       children += line
     }
 
-    let columns = {
-      let columns = if view-separator != none {
+    let cols = {
+      let cols = if view-separator != none {
         view.len() * 2 - 1
       } else {
         view.len()
       }
       if line-num-fmt != none {
         if compact-line-nums {
-          columns + 1
+          cols + 1
         } else {
-          columns + 2
+          cols + 2
         }
       } else {
-        columns
+        cols
       }
     }
 
     let data-fill = fill
-    let fill(column, row) = {
-      let column = if compact-line-nums and line-num-fmt != none {
-        if column == 0 {
+    let fill(col, row) = {
+      let col = if compact-line-nums and line-num-fmt != none {
+        if col == 0 {
           return view-separator-fill
         }
-        column - 1
+        col - 1
       } else {
-        column
+        col
       }
-      if calc.even(column) {
+      if calc.even(col) {
         data-fill(row)
       } else {
         view-separator-fill
@@ -400,25 +400,13 @@
       } else {
         inset.x
       }
-      table(
-        columns: columns,
-        fill: fill,
-        stroke: stroke,
-        inset: inset,
-        ..children,
-      )
+      table(columns: cols, fill: fill, stroke: stroke, inset: inset, ..children)
     } else {
       block(
         stroke: stroke,
         radius: radius,
         clip: true,
-        table(
-          columns: columns,
-          fill: fill,
-          stroke: none,
-          inset: 0pt,
-          ..children,
-        ),
+        table(columns: cols, fill: fill, stroke: none, inset: 0pt, ..children),
       )
     }
   })
