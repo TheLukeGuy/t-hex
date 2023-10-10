@@ -107,6 +107,8 @@
 #let _default-view-separator-fill = rgb(0%, 0%, 0%, 10%)
 #let _default-fill = (none, rgb(0%, 0%, 0%, 5%))
 #let _default-line-num-alignment = right
+#let _compact-line-nums-default = true
+#let _default-compact-line-num-text-fill = rgb(0%, 0%, 0%, 50%)
 #let _default-group-separator-len = 0.5em
 #let _default-byte-reprs-without-group-separators = (byte-repr.ascii-text,)
 #let _use-standard-table-default = false
@@ -265,6 +267,8 @@
   view-separator-fill,
   fill,
   line-num-alignment,
+  compact-line-nums,
+  compact-line-num-text-fill,
   group-separator-len,
   byte-reprs-without-group-separators,
   use-standard-table,
@@ -301,7 +305,7 @@
   }
 
   style(styles => {
-    let view-separator = if not use-standard-table {
+    let (view-separator-line, view-separator) = if not use-standard-table {
       let text-height = measure(raw("0"), styles).height
       let row-height = text-height + (inset.y * 2)
       let separator-line = box(line(
@@ -310,15 +314,16 @@
         angle: 90deg,
         stroke: stroke,
       ))
-      if view-separator-len != 0pt {
+      let separator = if view-separator-len != 0pt {
         separator-line
         h(view-separator-len)
         separator-line
       } else {
         separator-line
       }
+      (separator-line, separator)
     } else if view-separator-len != 0pt {
-      h(view-separator-len, weak: true)
+      (none, h(view-separator-len, weak: true))
     }
 
     let children = ()
@@ -340,35 +345,53 @@
           line-num-uppercase-digits,
           pad-line-nums-to,
         )
-        let cell = align(line-num-alignment, cell(raw(line-num)))
-        (cell, view-separator) + line
+        let line-prefix = if compact-line-nums {
+          let cell = cell(text(fill: compact-line-num-text-fill, raw(line-num)))
+          let cell = box(cell) + view-separator-line
+          (align(line-num-alignment, cell),)
+        } else {
+          let cell = cell(raw(line-num))
+          (align(line-num-alignment, cell), view-separator)
+        }
+        line-prefix + line
       } else {
         line
       }
       children += line
     }
 
-    let columns = if view-separator != none {
-      let columns = view.len() * 2 - 1
-      if line-num-fmt != none {
-        columns + 2
+    let columns = {
+      let columns = if view-separator != none {
+        view.len() * 2 - 1
       } else {
-        columns
+        view.len()
       }
-    } else {
-      let columns = view.len()
       if line-num-fmt != none {
-        columns + 2
+        if compact-line-nums {
+          columns + 1
+        } else {
+          columns + 2
+        }
       } else {
         columns
       }
     }
 
     let data-fill = fill
-    let fill(column, row) = if calc.even(column) {
-      data-fill(row)
-    } else {
-      view-separator-fill
+    let fill(column, row) = {
+      let column = if compact-line-nums and line-num-fmt != none {
+        if column == 0 {
+          return view-separator-fill
+        }
+        column - 1
+      } else {
+        column
+      }
+      if calc.even(column) {
+        data-fill(row)
+      } else {
+        view-separator-fill
+      }
     }
 
     if use-standard-table {
@@ -423,6 +446,8 @@
   view-separator-fill: _default-view-separator-fill,
   fill: _default-fill,
   line-num-alignment: _default-line-num-alignment,
+  compact-line-nums: _compact-line-nums-default,
+  compact-line-num-text-fill: _default-compact-line-num-text-fill,
   group-separator-len: _default-group-separator-len,
   byte-reprs-without-group-separators: (
     _default-byte-reprs-without-group-separators
@@ -508,6 +533,8 @@
     _ => fill
   }
 
+  _check-type("compact-line-nums", compact-line-nums, bool)
+  _check-type("compact-line-num-text-fill", compact-line-num-text-fill, color)
   _check-type("line-num-alignment", line-num-alignment, alignment)
   _check-type("group-separator-len", group-separator-len, length)
 
@@ -553,6 +580,8 @@
       view-separator-fill,
       fill,
       line-num-alignment,
+      compact-line-nums,
+      compact-line-num-text-fill,
       group-separator-len,
       byte-reprs-without-group-separators,
       use-standard-table,
@@ -576,6 +605,8 @@
         view-separator-fill,
         fill,
         line-num-alignment,
+        compact-line-nums,
+        compact-line-num-text-fill,
         group-separator-len,
         byte-reprs-without-group-separators,
         use-standard-table,
