@@ -308,12 +308,13 @@
     let (view-separator-line, view-separator) = if not use-standard-table {
       let text-height = measure(raw("0"), styles).height
       let row-height = text-height + (inset.y * 2)
-      let separator-line = box(line(
-        length:
-        row-height,
-        angle: 90deg,
-        stroke: stroke,
-      ))
+      let separator-line = if stroke != none {
+        box(line(
+          length: row-height,
+          angle: 90deg,
+          stroke: stroke,
+        ))
+      }
       let separator = if view-separator-len != 0pt {
         separator-line
         h(view-separator-len)

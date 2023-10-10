@@ -24,6 +24,7 @@
   data,
   line-num-fmt: num-fmt.hex,
   line-num-padding: true,
+  stroke: none,
   view-separator-fill: none,
   fill: none,
   compact-line-nums: false,
