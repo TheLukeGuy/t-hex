@@ -322,8 +322,8 @@
         separator-line
       }
       (separator-line, separator)
-    } else if view-separator-len != 0pt {
-      (none, h(view-separator-len, weak: true))
+    } else {
+      (none, h(view-separator-len - (inset.x * 2)))
     }
 
     let children = ()
@@ -361,11 +361,7 @@
     }
 
     let cols = {
-      let cols = if view-separator != none {
-        view.len() * 2 - 1
-      } else {
-        view.len()
-      }
+      let cols = view.len() * 2 - 1
       if line-num-fmt != none {
         if compact-line-nums {
           cols + 1

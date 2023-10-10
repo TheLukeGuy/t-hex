@@ -28,3 +28,5 @@
   fill: none,
   compact-line-nums: false,
 )
+
+#t-hex.display(data, use-standard-table: true)
